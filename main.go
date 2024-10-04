@@ -4,6 +4,7 @@ import (
     "bytes"
     "encoding/csv"
     "fmt"
+    "gopkg.in/gomail.v2"
     "html/template"
     "net/smtp"
     "os"
