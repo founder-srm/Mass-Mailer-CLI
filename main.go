@@ -84,7 +84,7 @@ func sendGoMail(subject string, templatePath string, toEmails []string) {
         fmt.Println(err)
         return
     }
-    t.Execute(&body, struct{ Name string }{Name: "vinu"})
+    t.Execute(&body, nil)
 
     //send with go mail
     m := gomail.NewMessage()
