@@ -1,12 +1,12 @@
 package main
 
 import (
+    "bufio"
     "bytes"
     "encoding/csv"
     "fmt"
     "gopkg.in/gomail.v2"
     "html/template"
-    "net/smtp"
     "os"
     "strings"
     "time"
@@ -19,64 +19,8 @@ var subject string
 var htmlTemplatePath string
 var emails []string
 
-func sendMail(subject string, body string, toEmails []string) {
-    auth := smtp.PlainAuth("",
-        "vinayakcsurya@gmail.com",
-        "lblvwntpckhbbjds",
-        "smtp.gmail.com")
-
-    msg := "Subject: " + subject + "\n" + body
-
-    err := smtp.SendMail(
-        "smtp.gmail.com:587",
-        auth,
-        "vinayakcsurya@gmail.com",
-        toEmails,
-        []byte(msg),
-
-    )
-    if err != nil {
-        fmt.Printf("Error: %v\n", err)
-    }
-
-}
-
-func sendMailHTML(subject string, templatePath string, toEmails []string) {
-    // Get html
-    var body bytes.Buffer
-    t, err := template.ParseFiles(templatePath)
-    t.Execute(&body, struct{ Name string }{Name: "Robby"})
-
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-
-    auth := smtp.PlainAuth(
-        "",
-        "vinayakcsurya@gmail.com",
-        "lblvwntpckhbbjds",
-        "smtp.gmail.com",
-    )
-
-    Headers := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";"
-    msg := "Subject: " + subject + "\n" + Headers + "\n\n" + body.String()
-
-    err = smtp.SendMail(
-        "smtp.gmail.com:587",
-        auth,
-        "vinayakcsurya@gmail.com",
-        toEmails,
-        []byte(msg),
-
-    )
-    if err != nil {
-        fmt.Printf("Error: %v\n", err)
-    }
-
-}
-
 func sendGoMail(subject string, templatePath string, toEmails []string) {
+    println("sending mail...")
     // Get html
     var body bytes.Buffer
     t, err := template.ParseFiles(templatePath)
@@ -101,19 +45,12 @@ func sendGoMail(subject string, templatePath string, toEmails []string) {
     if err := d.DialAndSend(m); err != nil {
         panic(err)
     }
+    println("mail sent!")
 }
 
 func CliPrompt() {
+    reader := bufio.NewReader(os.Stdin)
 
-    //    asciiText1 := `
-    //___________                      .___                    _________ .__       ___.
-    //\_   _____/___  __ __  ____    __| _/___________  ______ \_   ___ \|  |  __ _\_ |__
-    // |    __)/  _ \|  |  \/    \  / __ |/ __ \_  __ \/  ___/ /    \  \/|  | |  |  \ __ \
-    // |     \(  <_> )  |  /   |  \/ /_/ \  ___/|  | \/\___ \  \     \___|  |_|  |  / \_\ \
-    // \___  / \____/|____/|___|  /\____ |\___  >__|  /____  >  \______  /____/____/|___  /
-    //     \/                   \/      \/    \/           \/          \/               \/
-    //
-    //`
     asciiText2 := `
  /$$$$$$$$                                  /$$                                      /$$$$$$  /$$           /$$      
 | $$_____/                                 | $$                                     /$$__  $$| $$          | $$      
@@ -125,35 +62,43 @@ func CliPrompt() {
 |__/    \______/  \______/ |__/  |__/ \_______/ \_______/|__/      |_______/        \______/ |__/ \______/ |_______/ 
                                                                                                                      
 `
-    //fmt.Println(asciiText1)
+
     fmt.Println(asciiText2)
-    fmt.Print("Welcome to mass mailer of Founders Club!")
+    fmt.Printf("Welcome to mass mailer of Founders Club!")
     fmt.Println()
 
-    fmt.Print("Enter Senders email address: ")
-    //fmt.Scanf("%s", &senderEmail)
+    //fmt.Print("Enter Senders email address: ")
+    //fmt.Scanln(&senderEmail)
 
     fmt.Print("Path to csv file: ")
-    fmt.Scanf("%s", &csvFilePath)
-    //csvFilePath = "/Users/vinayak/IdeaProjects/GO-projects/mailer/emails.csv"
+    csvFilePath, _ = reader.ReadString('\n')
+    csvFilePath = strings.TrimSpace(csvFilePath)
 
-    fmt.Printf("Path to html template: ")
-    fmt.Scanf("%s", &htmlTemplatePath)
-    //htmlTemplatePath := "/Users/vinayak/IdeaProjects/GO-projects/mailer/template.html"
+    fmt.Print("Path to html template: ")
+    htmlTemplatePath, _ = reader.ReadString('\n')
+    htmlTemplatePath = strings.TrimSpace(htmlTemplatePath)
 
     fmt.Print("Subject: ")
-    fmt.Scanf("%s", &subject)
-    //subject = "this is a subject"
+    subject, _ = reader.ReadString('\n')
+    subject = strings.TrimSpace(subject)
 
     fmt.Print("Confirm? [y/n]: ")
-    fmt.Scanf("%s", &confirm)
+    confirm, _ = reader.ReadString('\n')
+    confirm = strings.TrimSpace(confirm)
 
-    ReadCSV(csvFilePath)
-    time.Sleep(1 * time.Second)
-    sendGoMail(subject, htmlTemplatePath, emails)
+    if confirm == "y" {
+        ReadCSV(csvFilePath)
+        time.Sleep(1 * time.Second)
+        sendGoMail(subject, htmlTemplatePath, emails)
+    } else {
+        fmt.Printf("%s", confirm)
+        println("terminated!")
+        os.Exit(0)
+    }
 }
 
 func ReadCSV(csvFilePath string) {
+    println("reading CSV file...")
     // Open the CSV file
     file, err := os.Open(csvFilePath)
     if err != nil {
@@ -162,21 +107,18 @@ func ReadCSV(csvFilePath string) {
     }
     defer file.Close()
 
-    // Create a new CSV reader
     reader := csv.NewReader(file)
 
-    // Read all the rows from the CSV
     records, err := reader.ReadAll()
     if err != nil {
         fmt.Println("Error:", err)
         return
     }
-    // Iterate through each record (row)
+
     for i, record := range records {
         fmt.Printf("Record %d: %v\n", i+1, record)
 
         // Assuming the emails in each row are separated by commas
-        // Loop through each column in the record
         for _, field := range record {
             // Split the emails in the field by commas
             splitEmails := strings.Split(field, ",")
