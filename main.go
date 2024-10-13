@@ -10,6 +10,8 @@ import (
     "os"
     "strings"
     "time"
+
+    tea "github.com/charmbracelet/bubbletea"
 )
 
 var senderEmail string
