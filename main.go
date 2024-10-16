@@ -10,8 +10,6 @@ import (
     "os"
     "strings"
     "time"
-
-    tea "github.com/charmbracelet/bubbletea"
 )
 
 var senderEmail string
@@ -39,7 +37,6 @@ func sendGoMail(subject string, templatePath string, toEmails []string) {
     //m.SetAddressHeader("Cc", "dan@example.com", "Dan")
     m.SetHeader("Subject", subject)
     m.SetBody("text/html", body.String())
-    m.Attach("img.png")
 
     d := gomail.NewDialer("smtp.gmail.com", 587, "vinayakcsurya@gmail.com", "lblvwntpckhbbjds")
 
